@@ -17,6 +17,7 @@
     </div>
     <div class="addDiv">
         <form action="/view/show" method="post">
+            {% csrf_token %}
             <div class="add">
                 <span>Title&nbsp</span>
                 <input class="input" name="title" type="text" maxlength="200">
@@ -45,7 +46,6 @@
             <div class="submit">
                 <input class="submit" type="submit" name="" value="Submit">
             </div>
-            {% csrf_token %}
         </form>
     </div>
 </div>
