@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
-    <script scr="sample.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/sample.css">
-    <link rel="shortcut icon" type="image/x-icon" href="icon.png">
+    <link rel="shortcut icon" type="image/x-icon" href="/static/icon.png">
+    <script type="text/javascript" src="/static/Chart.js"></script>
+    <script type="text/javascript" src="/static/sample.js"></script>
     <meta charset="UTF-8">
     <title>Movie Predictor</title>
 </head>
@@ -14,7 +15,78 @@
         Create A New Movie
         <hr/>
     </div>
+    <div class="addDiv">
+        <form action="/view/show" method="post">
+            <div class="add">
+                <span>Title&nbsp</span>
+                <input class="input" name="title" type="text" maxlength="200">
+            </div>
+            <div class="add">
+                <span>Genre&nbsp</span>
+                <select name="genre">
+                    <option value="1">Horror</option>
+                    <option value="2">Romantic</option>
+                    <option value="3">Comedy</option>
+                    <option value="4">Action</option>
+                </select>
+            </div>
+            <div class="add">
+                <span>Actors' IDs&nbsp</span>
+                <input class="input" name="actorID" type="text" maxlength="200">
+            </div>
+            <div class="add">
+                <span>Director's ID&nbsp</span>
+                <input class="input" name="directorID" type="text" maxlength="200">
+            </div>
+            <div class="add">
+                <span>Length&nbsp</span>
+                <input class="input" name="length" type="number" maxlength="3">
+            </div>
+            <div class="submit">
+                <input class="submit" type="submit" name="" value="Submit">
+            </div>
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
 
+<div class="result main">
+    <div class="title">
+        Score Distribution
+        <hr/>
+    </div>
+    <div class="chart">
+        <canvas id="myChart"></canvas>
+        <script type="text/javascript">
+        var data = {
+                    labels : ["General Score","Actor Score","Actress Score","Director Score","Average Length","Average Genre Score","Average Box Office"],
+                    datasets : [
+                        {
+                            label: "Horror 6242",
+                            fbackgroundColor: "rgba(179,181,198,0.2)",
+                            borderColor: "rgba(179,181,198,1)",
+                            pointBackgroundColor: "rgba(179,181,198,1)",
+                            pointBorderColor: "#fff",
+                            pointHoverBackgroundColor: "#fff",
+                            pointHoverBorderColor: "rgba(179,181,198,1)",
+                            data : [65,59,90,81,56,55,40]
+                        },
+                        {
+                            label: "Average",
+                            backgroundColor: "rgba(255,99,132,0.2)",
+                            borderColor: "rgba(255,99,132,1)",
+                            pointBackgroundColor: "rgba(255,99,132,1)",
+                            pointBorderColor: "#fff",
+                            pointHoverBackgroundColor: "#fff",
+                            pointHoverBorderColor: "rgba(255,99,132,1)",
+                            data : [28,48,40,19,96,27,100]
+                        }
+                    ]
+                }
+
+        drawChart(data);
+        </script>
+    </div>
 </div>
 </body>
 </html>
