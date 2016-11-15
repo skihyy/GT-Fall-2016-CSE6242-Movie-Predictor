@@ -6,6 +6,9 @@ ehthumbs.db
 Desktop.ini
 /.idea
 
+# Temporary files
+/view/__pycache__
+
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
