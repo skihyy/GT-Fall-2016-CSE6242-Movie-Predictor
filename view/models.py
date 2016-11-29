@@ -4,6 +4,19 @@ from django.db import models
 # Create your models here.
 
 
+class Person(models.Model):
+    """
+    This person can be either a director or a actor or both.
+    If she is both, then there will be 2 records in this table,
+    one as a actress, and the other one as a director.
+    """
+    name = models.CharField(max_length=40)
+    sex_is_male = models.BooleanField()
+    average_score = models.DecimalField(decimal_places=2, max_digits=3)
+    type_is_director = models.BooleanField()
+    num_of_movies = models.IntegerField()
+
+
 class AggregateInfo(models.Model):
     """
     Aggregate information is used to show the average score of all recorded movies.
@@ -45,6 +58,7 @@ class MovieInfo(models.Model):
     """
     title = models.CharField(max_length=200)
     genre = models.ForeignKey(Genre)
+    # actor ID should be separated by "," or ", "
     actor_ids = models.CharField(max_length=200)
     director_id = models.IntegerField()
     length = models.IntegerField()

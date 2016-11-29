@@ -28,6 +28,10 @@ class GenreAdmin(admin.ModelAdmin):
     list_display = ('id', 'genre')
 
 
+class PersonInfoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'num_of_movies', 'sex_is_male', 'average_score', 'type_is_director')
+
+
 class AggregateInfoAdmin(admin.ModelAdmin):
     list_display = ('id',
                     'number_of_movies',
@@ -40,6 +44,7 @@ class AggregateInfoAdmin(admin.ModelAdmin):
                     'avg_movie_box')
 
 
+admin.site.register(Person, PersonInfoAdmin)
 admin.site.register(MovieInfo, MovieInfoAdmin)
 admin.site.register(Genre, GenreAdmin)
 admin.site.register(AggregateInfo, AggregateInfoAdmin)

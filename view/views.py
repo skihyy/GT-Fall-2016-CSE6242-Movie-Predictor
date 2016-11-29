@@ -17,18 +17,64 @@ def add(request):
 def show(request):
     genre_selected = Genre.objects.get(id=request.POST["genre"])
 
+    # handle actors entered
+    # if in the DB, get her or him
+    # if not, create one
+    actors_name_from_form = request.POST["actors"]
+    actor_name_list = actors_name_from_form.split(",")
+    # get rid of space
+    actor_range = range(len(actor_name_list))
+    for i in actor_range:
+        actor_name_list[i] = actor_name_list[i].strip()
+    actor_list = []
+    actor_id = ""
+    for temp_actor_name in actor_name_list:
+        temp_actor_list = Person.objects.filter(name=temp_actor_name, type_is_director=False)
+        if 0 == len(temp_actor_list):
+            if 0 == random.uniform(0, 1):
+                temp_actor = Person(name=temp_actor_name, type_is_director=False,
+                                    sex_is_male=False, average_score=0, num_of_movies=0)
+            else:
+                temp_actor = Person(name=temp_actor_name, type_is_director=False,
+                                    sex_is_male=True, average_score=0, num_of_movies=0)
+            temp_actor.save()
+            temp_actor = Person.objects.last()
+        else:
+            temp_actor = temp_actor_list[0]
+
+        actor_list.append(temp_actor)
+        actor_id += str(temp_actor.id) + ","
+
+    director_name = request.POST["director"]
+    director_list = Person.objects.filter(name=director_name, type_is_director=True)
+
+    # same way for a director
+    if 0 == len(director_list):
+        if 0 == random.uniform(0, 1):
+            director = Person(name=director_name, type_is_director=True, average_score=0,
+                              num_of_movies=0, sex_is_male=False)
+        else:
+            director = Person(name=director_name, type_is_director=True, average_score=0,
+                              num_of_movies=0, sex_is_male=True)
+        director.save()
+        director = Person.objects.last()
+    else:
+        director = director_list[0]
+
+    director_id = director.id
+
     movie_info = MovieInfo(
         title=request.POST["title"],
         genre=genre_selected,
-        actor_ids=request.POST["actorID"],
-        director_id=request.POST["directorID"],
+        actor_ids=actor_id,
+        director_id=director_id,
         length=request.POST["length"]
     )
 
     movie_info.save()
     saved_movie_info = MovieInfo.objects.last()
 
-    saved_movie_score, saved_aggregate_info = compute_score(saved_movie_info)
+    saved_movie_score, saved_aggregate_info = compute_score(saved_movie_info, actor_list, director)
 
     chart_js_data = get_chart_js_value(saved_aggregate_info=saved_aggregate_info, saved_movie_score=saved_movie_score)
 
@@ -40,18 +86,47 @@ def show(request):
                    'genres': genre})
 
 
-def compute_score(saved_movie_info):
+def compute_score(saved_movie_info, actor_list, director):
     """
     A method used to compute the score of a movie.
     Currently, it used a random number generator for predicting movie score.
     But later this should be fixed by using a real learner.
     :param saved_movie_info: A movie information object
+    :param actor_list: A list of person objects for actors / actresses
+    :param director: A person object for director
     :return: A movie score object contains all score of it and the aggregate score information
     """
+    # actors score
+    temp_actor_score = 0.0
+    num_of_actors = 0
+    temp_actress_score = 0.0
+    num_of_actress = 0
+    for actor in actor_list:
+        temp_generated_score = random.uniform(3, 9)
+        if actor.sex_is_male:
+            temp_actor_score += temp_generated_score
+            num_of_actors += 1
+        else:
+            temp_actress_score += temp_generated_score
+            num_of_actress += 1
+        # update data
+        temp_actor_total_score = float(actor.average_score) * float(actor.num_of_movies) + temp_generated_score
+        actor.num_of_movies += 1
+        actor.average_score = temp_actor_total_score / actor.num_of_movies
+        actor.save()
 
-    temp_actor_score = random.uniform(3, 9)
-    temp_actress_score = random.uniform(3, 9)
+    if 0 != num_of_actors:
+        temp_actor_score /= num_of_actors
+    if 0 != num_of_actress:
+        temp_actress_score /= num_of_actress
+
+    # director score
     temp_director_score = random.uniform(3, 9)
+    director.num_of_movies += 1
+    director.average_score = (float(director.average_score) * (director.num_of_movies - 1)
+                              + temp_director_score) / float(director.num_of_movies)
+    director.save()
+
     temp_length_score = random.uniform(3, 9)
     temp_genre_score = random.uniform(3, 9)
     temp_box_score = random.uniform(3, 9)
