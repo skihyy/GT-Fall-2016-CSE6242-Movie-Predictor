@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <link rel="stylesheet" type="text/css" href="/static/sample.css">
+    <link rel="shortcut icon" type="image/x-icon" href="/static/icon.png">
+    <script type="text/javascript" src="/static/Chart.js"></script>
+    <script type="text/javascript" src="/static/sample.js"></script>
+    <meta charset="UTF-8">
+    <title>Movie Predictor</title>
+</head>
+<body>
+<!-- Input part -->
+<div class="create main">
+    <div class="title">
+        Prediction of {{ movie_title | safe }}
+        <hr/>
+    </div>
+
+    <div class="result main">
+        <div class="general">
+            <div class="title">
+                Score Distribution
+                <hr/>
+            </div>
+            <div class="details">
+                <div class="chart">
+                    <canvas id="myChart"></canvas>
+                    <script type="text/javascript">
+                        var data = {{ chart_js_data | safe }};
+                        drawChart(data);
+                    </script>
+                </div>
+                <div class="analysis">
+                    {% if general_analysis %}
+                        <div class="general">{{ general_analysis.general }}</div>
+                        <div class="actor">{{ general_analysis.actor }}</div>
+                        <div class="actress">{{ general_analysis.actress }}</div>
+                        <div class="director">{{ general_analysis.director }}</div>
+                        <div class="duration">{{ general_analysis.duration }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

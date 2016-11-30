@@ -3,7 +3,6 @@
 <head>
     <link rel="stylesheet" type="text/css" href="/static/sample.css">
     <link rel="shortcut icon" type="image/x-icon" href="/static/icon.png">
-    <script type="text/javascript" src="/static/Chart.js"></script>
     <script type="text/javascript" src="/static/sample.js"></script>
     <meta charset="UTF-8">
     <title>Movie Predictor</title>
@@ -48,25 +47,6 @@
                 <input class="submit" type="submit" name="" value="Submit">
             </div>
         </form>
-    </div>
-</div>
-
-<div class="result main">
-    <div class="title">
-        Score Distribution
-        <hr/>
-    </div>
-    <div class="details">
-        <div class="chart">
-            <canvas id="myChart"></canvas>
-            <script type="text/javascript">
-                var data = {{ chart_js_data | safe }};
-                drawChart(data);
-            </script>
-        </div>
-        <div class="analysis">
-
-        </div>
     </div>
 </div>
 </body>

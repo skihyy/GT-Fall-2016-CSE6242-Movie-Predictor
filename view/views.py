@@ -5,16 +5,25 @@ import random, json
 
 # Create your views here.
 def add(request):
+    """
+    Go to add a movie page.
+    :param request: http request
+    :return: web page of adding a movie
+    """
     saved_aggregate_info = AggregateInfo.objects.get(id=1)
     chart_js_data = get_chart_js_value(saved_aggregate_info=saved_aggregate_info)
     genre = Genre.objects.all()
     return render(request,
-                  'sample.html',
-                  {'chart_js_data': json.dumps(chart_js_data),
-                   'genres': genre})
+                  'input.html',
+                  {'genres': genre})
 
 
 def show(request):
+    """
+    Handling the new movie information and generate result page.
+    :param request: http request
+    :return: web page of result
+    """
     genre_selected = Genre.objects.get(id=request.POST["genre"])
 
     # handle actors entered
@@ -78,12 +87,13 @@ def show(request):
 
     chart_js_data = get_chart_js_value(saved_aggregate_info=saved_aggregate_info, saved_movie_score=saved_movie_score)
 
-    genre = Genre.objects.all()
+    general_analysis = create_general_analysis(saved_movie_score)
 
     return render(request,
-                  'sample.html',
+                  'output.html',
                   {'chart_js_data': chart_js_data,
-                   'genres': genre})
+                   'movie_title': saved_movie_info.title,
+                   'general_analysis': general_analysis})
 
 
 def compute_score(saved_movie_info, actor_list, director):
@@ -169,12 +179,42 @@ def compute_score(saved_movie_info, actor_list, director):
     return saved_movie_score, saved_aggregate_info
 
 
+def create_general_analysis(saved_movie_score):
+    """
+    Based on the score received, generate analysis.
+    :param saved_movie_score: a movie score object
+    :return: a plain text paragraph for analysis
+    """
+    analysis = {}
+    if 5 > saved_movie_score.score:
+        analysis["general"] = "Compared to other movies, yours may need improvement. " \
+                              "Did you make a mistake by entering incorrect information? "
+    elif 7 > saved_movie_score.score:
+        analysis["general"] = "Compared to other movies, not bad! Actually, it is a good movie. "
+    else:
+        analysis["general"] = "Compared to other movies, your movie will be the best-seller! "
+
+    if 6 < saved_movie_score.actor_score:
+        analysis["actor"] = str(saved_movie_score.actor_score) + " - great choice for actors!"
+
+    if 6 < saved_movie_score.actress_score:
+        analysis["actress"] = str(saved_movie_score.actress_score) + " - lovely actresses!"
+
+    if 6 > saved_movie_score.director_score:
+        analysis["director"] = str(saved_movie_score.director_score) + " - new director!? Wow!"
+
+    if 5 > saved_movie_score.length_score:
+        analysis["length"] = str(saved_movie_score.length_score) + " - interesting duration! Hum..."
+
+    return analysis
+
+
 def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
     """
-
-    :param saved_aggregate_info:
-    :param saved_movie_score:
-    :return:
+    Get json from score to generate radar chart.
+    :param saved_aggregate_info: general score information for all movies
+    :param saved_movie_score: specific score information for one movie
+    :return: json for create radar chart
     """
     if 0 == saved_aggregate_info.number_of_movies:
         temp_score = 0
