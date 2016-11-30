@@ -11,7 +11,6 @@ def add(request):
     :return: web page of adding a movie
     """
     saved_aggregate_info = AggregateInfo.objects.get(id=1)
-    chart_js_data = get_chart_js_value(saved_aggregate_info=saved_aggregate_info)
     genre = Genre.objects.all()
     return render(request,
                   'input.html',
@@ -317,12 +316,15 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
             ]
         }
 
-    # print(json.dumps(data))s
-
     return data
 
 
 def json_score(saved_movie_score):
+    """
+    Get JSON format movie score object in order to parse into HTML.
+    :param saved_movie_score: Movie score object
+    :return: JSON format movie score object
+    """
     return {"score": saved_movie_score.score, "actor_score": saved_movie_score.actor_score,
             "actress_score": saved_movie_score.actress_score, "director_score": saved_movie_score.director_score,
             "duration_score": saved_movie_score.duration_score, "genre_score": saved_movie_score.genre_score,
