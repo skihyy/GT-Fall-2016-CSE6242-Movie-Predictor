@@ -15,13 +15,28 @@
         Prediction of {{ movie_title | safe }}
         <hr/>
     </div>
+    <div class="general">
+        {% if general_analysis %}
+            <div class="general">{{ general_analysis.general }}</div>
+            {% if general_analysis.actor %}
+                <div class="actor general">{{ general_analysis.actor }}</div>
+            {% endif %}
+            {% if general_analysis.actress %}
+                <div class="actress general">{{ general_analysis.actress }}</div>
+            {% endif %}
+            <div class="director general">{{ general_analysis.director }}</div>
+            {% if general_analysis.duration %}
+                <div class="duration general">{{ general_analysis.duration }}</div>
+            {% endif %}
+        {% endif %}
+    </div>
 
+    <div class="title">
+        Score Distribution
+        <hr/>
+    </div>
     <div class="result main">
         <div class="general">
-            <div class="title">
-                Score Distribution
-                <hr/>
-            </div>
             <div class="details">
                 <div class="chart">
                     <canvas id="myChart"></canvas>
@@ -31,13 +46,7 @@
                     </script>
                 </div>
                 <div class="analysis">
-                    {% if general_analysis %}
-                        <div class="general">{{ general_analysis.general }}</div>
-                        <div class="actor">{{ general_analysis.actor }}</div>
-                        <div class="actress">{{ general_analysis.actress }}</div>
-                        <div class="director">{{ general_analysis.director }}</div>
-                        <div class="duration">{{ general_analysis.duration }}</div>
-                    {% endif %}
+
                 </div>
             </div>
         </div>

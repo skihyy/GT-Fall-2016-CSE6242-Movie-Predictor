@@ -1,7 +1,7 @@
 body
 {
     font-family: San Francisco, STXihei, Arial, sans-serif;
-    font-size: 18px;
+    font-size: 1.2em;
     padding: 5% 5% 5% 5%;
 }
 
@@ -34,7 +34,7 @@ canvas
     width: 95%;
 }
 
-.chart, .details
+.chart, .analysis
 {
     float: left;
     width: 40%;
@@ -43,5 +43,17 @@ canvas
     min-width: 400px;
 }
 
+.center, .general
+{
+    font-size: 1em;
+}
 
+.center
+{
+    text-align: center;
+}
 
+.general
+{
+    line-height: 2;
+}

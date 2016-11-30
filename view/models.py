@@ -29,7 +29,7 @@ class AggregateInfo(models.Model):
     actor_score = models.DecimalField(decimal_places=2, max_digits=20)
     actress_score = models.DecimalField(decimal_places=2, max_digits=20)
     director_score = models.DecimalField(decimal_places=2, max_digits=20)
-    length_score = models.DecimalField(decimal_places=2, max_digits=20)
+    duration_score = models.DecimalField(decimal_places=2, max_digits=20)
     genre_score = models.DecimalField(decimal_places=2, max_digits=20)
     avg_movie_box = models.DecimalField(decimal_places=2, max_digits=20)
 
@@ -54,14 +54,14 @@ class MovieInfo(models.Model):
     Genre is provided.
     Actors should also be provided.
     Directors should also be provided.
-    Length is in minutes.
+    duration is in minutes.
     """
     title = models.CharField(max_length=200)
     genre = models.ForeignKey(Genre)
     # actor ID should be separated by "," or ", "
     actor_ids = models.CharField(max_length=200)
     director_id = models.IntegerField()
-    length = models.IntegerField()
+    duration = models.IntegerField()
 
     def __str__(self):
         return self.title
@@ -81,7 +81,7 @@ class MovieScore(models.Model):
     actor_score = models.DecimalField(decimal_places=2, max_digits=3)
     actress_score = models.DecimalField(decimal_places=2, max_digits=3)
     director_score = models.DecimalField(decimal_places=2, max_digits=3)
-    length_score = models.DecimalField(decimal_places=2, max_digits=3)
+    duration_score = models.DecimalField(decimal_places=2, max_digits=3)
     genre_score = models.DecimalField(decimal_places=2, max_digits=3)
     avg_movie_box = models.DecimalField(decimal_places=2, max_digits=3)
 

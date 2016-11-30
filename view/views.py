@@ -77,7 +77,7 @@ def show(request):
         genre=genre_selected,
         actor_ids=actor_id,
         director_id=director_id,
-        length=request.POST["length"]
+        duration=request.POST["duration"]
     )
 
     movie_info.save()
@@ -137,17 +137,17 @@ def compute_score(saved_movie_info, actor_list, director):
                               + temp_director_score) / float(director.num_of_movies)
     director.save()
 
-    temp_length_score = random.uniform(3, 9)
+    temp_duration_score = random.uniform(3, 9)
     temp_genre_score = random.uniform(3, 9)
     temp_box_score = random.uniform(3, 9)
     temp_score = (temp_actor_score + temp_actress_score +
-                  temp_director_score + temp_length_score +
+                  temp_director_score + temp_duration_score +
                   temp_genre_score + temp_box_score) / 6
 
     movie_score = MovieScore(movie=saved_movie_info,
                              actor_score=temp_actor_score,
                              director_score=temp_director_score,
-                             length_score=temp_length_score,
+                             duration_score=temp_duration_score,
                              genre_score=temp_genre_score,
                              score=temp_score,
                              actress_score=temp_actress_score,
@@ -166,7 +166,7 @@ def compute_score(saved_movie_info, actor_list, director):
     aggregate_score_object.actor_score += saved_movie_score.actor_score
     aggregate_score_object.actress_score += saved_movie_score.actress_score
     aggregate_score_object.director_score += saved_movie_score.director_score
-    aggregate_score_object.length_score += saved_movie_score.length_score
+    aggregate_score_object.duration_score += saved_movie_score.duration_score
     aggregate_score_object.genre_score += saved_movie_score.genre_score
     aggregate_score_object.avg_movie_box += saved_movie_score.avg_movie_box
     aggregate_score_object.score += saved_movie_score.score
@@ -194,17 +194,37 @@ def create_general_analysis(saved_movie_score):
     else:
         analysis["general"] = "Compared to other movies, your movie will be the best-seller! "
 
-    if 6 < saved_movie_score.actor_score:
-        analysis["actor"] = str(saved_movie_score.actor_score) + " - great choice for actors!"
+    if 0 != saved_movie_score.actor_score:
+        if 5 > saved_movie_score.actor_score:
+            analysis["actor"] = "Maybe you could have other actors here. " \
+                                "They may have different experiences which may help you be even " \
+                                "more successful in this movie!"
+        elif 7 > saved_movie_score.actor_score:
+            analysis["actor"] = "Good choice in actors. To be honest, actors are very important " \
+                                "in a movie. And you made it! Great team with great actors!"
+        else:
+            analysis["actor"] = "**!! What a talent producer here who made such a talent decision! " \
+                                "I'm sure your movie will be great in actor list!"
 
-    if 6 < saved_movie_score.actress_score:
-        analysis["actress"] = str(saved_movie_score.actress_score) + " - lovely actresses!"
+    if 0 != saved_movie_score.actress_score:
+        if 5 > saved_movie_score.actress_score:
+            analysis["actress"] = "Lovely beauties in actress list. But that may not be enough to make you a success."
+        elif 7 > saved_movie_score.actress_score:
+            analysis["actress"] = "Wow! What a nice actress group. Being honest, this team can make some difference! " \
+                                  "Your file may be even better if you could have more considerations about scenes, " \
+                                  "environment, and etc. But it seems very good now."
+        else:
+            analysis["actress"] = "110 / 100 actress team!"
 
-    if 6 > saved_movie_score.director_score:
-        analysis["director"] = str(saved_movie_score.director_score) + " - new director!? Wow!"
+    if 5 > saved_movie_score.director_score:
+        analysis["director"] = "Hum ... Let me check ... The director is relatively new hum? Nice try!"
+    elif 7 > saved_movie_score.director_score:
+        analysis["director"] = "Good director. I always like him."
+    else:
+        analysis["director"] = "What!?? You have the best director!!?? Awesome!!!"
 
-    if 5 > saved_movie_score.length_score:
-        analysis["length"] = str(saved_movie_score.length_score) + " - interesting duration! Hum..."
+    if 5 > saved_movie_score.duration_score:
+        analysis["duration"] = "The duration of this film is really ... hum ... interesting."
 
     return analysis
 
@@ -221,7 +241,7 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
         temp_actor_score = 0
         temp_actress_score = 0
         temp_director_score = 0
-        temp_length_score = 0
+        temp_duration_score = 0
         temp_genre_score = 0
         temp_movie_box = 0
     else:
@@ -229,14 +249,14 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
         temp_actor_score = saved_aggregate_info.actor_score / saved_aggregate_info.number_of_movies
         temp_actress_score = saved_aggregate_info.actress_score / saved_aggregate_info.number_of_movies
         temp_director_score = saved_aggregate_info.director_score / saved_aggregate_info.number_of_movies
-        temp_length_score = saved_aggregate_info.length_score / saved_aggregate_info.number_of_movies
+        temp_duration_score = saved_aggregate_info.duration_score / saved_aggregate_info.number_of_movies
         temp_genre_score = saved_aggregate_info.genre_score / saved_aggregate_info.number_of_movies
         temp_movie_box = saved_aggregate_info.avg_movie_box / saved_aggregate_info.number_of_movies
 
     if saved_movie_score is None:
         data = {
-            'labels': ["General Score", "Actor Score", "Actress Score", "Director Score", "Average Length",
-                       "Average Genre Score", "Average Box Office"],
+            'labels': ["General Score", "Actor Score", "Actress Score", "Director Score", "Duration",
+                       "Genre Score", "Box Office"],
             'datasets': [
                 {
                     'label': "Average",
@@ -250,7 +270,7 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
                              str(temp_actor_score),
                              str(temp_actress_score),
                              str(temp_director_score),
-                             str(temp_length_score),
+                             str(temp_duration_score),
                              str(temp_genre_score),
                              str(temp_movie_box)]
                 }
@@ -258,8 +278,8 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
         }
     else:
         data = {
-            'labels': ["General Score", "Actor Score", "Actress Score", "Director Score", "Average Length",
-                       "Average Genre Score", "Average Box Office"],
+            'labels': ["General Score", "Actor Score", "Actress Score", "Director Score", "Duration",
+                       "Genre Score", "Box Office"],
             'datasets': [
                 {
                     'label': str(saved_movie_score.movie.title),
@@ -273,7 +293,7 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
                              str(saved_movie_score.actor_score),
                              str(saved_movie_score.actress_score),
                              str(saved_movie_score.director_score),
-                             str(saved_movie_score.length_score),
+                             str(saved_movie_score.duration_score),
                              str(saved_movie_score.genre_score),
                              str(saved_movie_score.avg_movie_box)]
                 },
@@ -289,7 +309,7 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
                              str(temp_actor_score),
                              str(temp_actress_score),
                              str(temp_director_score),
-                             str(temp_length_score),
+                             str(temp_duration_score),
                              str(temp_genre_score),
                              str(temp_movie_box)]
                 }

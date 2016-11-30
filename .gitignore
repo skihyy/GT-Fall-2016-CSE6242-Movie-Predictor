@@ -4,6 +4,8 @@ ehthumbs.db
 
 # Python compile files
 *.pyc
+/*/*.pyc
+/Movie_Predictor/*.pyc
 
 # Folder config file
 Desktop.ini

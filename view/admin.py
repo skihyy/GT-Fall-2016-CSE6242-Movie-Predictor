@@ -15,11 +15,11 @@ class MovieInfoAdmin(admin.ModelAdmin):
     # search bar
     search_fields = ['title']
 
-    # fields = ['title', 'genre', 'actorIDs', 'directorID', 'length']
+    # fields = ['title', 'genre', 'actorIDs', 'directorID', 'duration']
     fieldsets = [
         (None, {'fields': ['title']}),
         ('General Information', {'fields': ['genre', 'actor_ids', 'director_id']}),
-        ('Other Information', {'fields': ['length'], 'classes': ['collapse']})
+        ('Other Information', {'fields': ['duration'], 'classes': ['collapse']})
     ]
     inlines = [MovieScoreInLine]
 
@@ -39,7 +39,7 @@ class AggregateInfoAdmin(admin.ModelAdmin):
                     'actor_score',
                     'actress_score',
                     'director_score',
-                    'length_score',
+                    'duration_score',
                     'genre_score',
                     'avg_movie_box')
 
