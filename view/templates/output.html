@@ -9,8 +9,7 @@
     <title>Movie Predictor</title>
 </head>
 <body>
-<!-- Input part -->
-<div class="create main">
+<div class="block">
     <div class="title">
         Prediction of {{ movie_title | safe }}
         <hr/>
@@ -30,26 +29,54 @@
             {% endif %}
         {% endif %}
     </div>
+</div>
 
+<div class="block">
     <div class="title">
         Score Distribution
         <hr/>
     </div>
-    <div class="result main">
-        <div class="general">
-            <div class="details">
-                <div class="chart">
-                    <canvas id="myChart"></canvas>
-                    <script type="text/javascript">
-                        var data = {{ chart_js_data | safe }};
-                        drawChart(data);
-                    </script>
-                </div>
-                <div class="analysis">
-
-                </div>
-            </div>
+    <div class="general">
+        <div class="analysis">
+            {% if movie_score %}
+                <div class="score">General score: {{ movie_score.score | safe }}</div>
+                {% if 0 != movie_score.actor_score %}
+                    <div class="score">Actor: {{ movie_score.actor_score | safe }}</div>
+                {% endif %}
+                {% if 0 != movie_score.actress_score %}
+                    <div class="score">Actress: {{ movie_score.actress_score | safe }}</div>
+                {% endif %}
+                <div class="score">Director: {{ movie_score.director_score | safe }}</div>
+                <div class="score">Duration: {{ movie_score.duration_score | safe }}</div>
+                <div class="score">Genre: {{ movie_score.genre_score | safe }}</div>
+                <div class="score">Movie Box: {{ movie_score.avg_movie_box | safe }}</div>
+            {% endif %}
         </div>
+        <div class="chart">
+            <canvas id="myChart"></canvas>
+            <script type="text/javascript">
+                var data = {{ chart_js_data | safe }};
+                drawChart(data);
+            </script>
+        </div>
+    </div>
+</div>
+
+<div class="block">
+    <div class="title">
+        Score Components
+        <hr/>
+    </div>
+    <div class="general">
+    </div>
+</div>
+
+<div class="block">
+    <div class="title">
+        Overall Comparison
+        <hr/>
+    </div>
+    <div class="general">
     </div>
 </div>
 </body>

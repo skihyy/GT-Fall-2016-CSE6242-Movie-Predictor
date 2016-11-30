@@ -93,6 +93,7 @@ def show(request):
                   'output.html',
                   {'chart_js_data': chart_js_data,
                    'movie_title': saved_movie_info.title,
+                   'movie_score': json_score(saved_movie_score),
                    'general_analysis': general_analysis})
 
 
@@ -283,12 +284,12 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
             'datasets': [
                 {
                     'label': str(saved_movie_score.movie.title),
-                    'fbackgroundColor': "rgba(179,181,198,0.2)",
-                    'borderColor': "rgba(179,181,198,1)",
-                    'pointBackgroundColor': "rgba(179,181,198,1)",
+                    'backgroundColor': "rgba(255,99,132,0.2)",
+                    'borderColor': "rgba(255,99,132,1)",
+                    'pointBackgroundColor': "rgba(255,99,132,1)",
                     'pointBorderColor': "#fff",
                     'pointHoverBackgroundColor': "#fff",
-                    'pointHoverBorderColor': "rgba(179,181,198,1)",
+                    'pointHoverBorderColor': "rgba(255,99,132,1)",
                     'data': [str(saved_movie_score.score),
                              str(saved_movie_score.actor_score),
                              str(saved_movie_score.actress_score),
@@ -299,12 +300,12 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
                 },
                 {
                     'label': "Average",
-                    'backgroundColor': "rgba(255,99,132,0.2)",
-                    'borderColor': "rgba(255,99,132,1)",
-                    'pointBackgroundColor': "rgba(255,99,132,1)",
+                    'fbackgroundColor': "rgba(179,181,198,0.2)",
+                    'borderColor': "rgba(179,181,198,1)",
+                    'pointBackgroundColor': "rgba(179,181,198,1)",
                     'pointBorderColor': "#fff",
                     'pointHoverBackgroundColor': "#fff",
-                    'pointHoverBorderColor': "rgba(255,99,132,1)",
+                    'pointHoverBorderColor': "rgba(179,181,198,1)",
                     'data': [str(temp_score),
                              str(temp_actor_score),
                              str(temp_actress_score),
@@ -316,6 +317,13 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
             ]
         }
 
-    # print(json.dumps(data))
+    # print(json.dumps(data))s
 
     return data
+
+
+def json_score(saved_movie_score):
+    return {"score": saved_movie_score.score, "actor_score": saved_movie_score.actor_score,
+            "actress_score": saved_movie_score.actress_score, "director_score": saved_movie_score.director_score,
+            "duration_score": saved_movie_score.duration_score, "genre_score": saved_movie_score.genre_score,
+            "avg_movie_box": saved_movie_score.avg_movie_box}

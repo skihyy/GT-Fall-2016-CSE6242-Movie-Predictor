@@ -1,59 +1,60 @@
-body
-{
+body {
     font-family: San Francisco, STXihei, Arial, sans-serif;
     font-size: 1.2em;
     padding: 5% 5% 5% 5%;
 }
 
-span
-{
+span {
     width: 20%;
     display: block;
     float: left;
 }
 
-div
-{
+div {
     padding: 2% 2% 2% 2%;
+    display: block;
 }
 
-input
-{
+input {
     width: 40%;
     display: block;
 }
 
-.submit
-{
-    padding: 1% 30% 1% 30%;
-}
-
-canvas
-{
+canvas {
     height: 95%;
     width: 95%;
 }
 
-.chart, .analysis
-{
+.submit {
+    padding: 1% 30% 1% 30%;
+}
+
+.block, .center, .general {
+    width: 100%;
+    float: none;
+    line-height: 2;
+    clear: both;
+}
+
+.block {
+    padding: 0% 0% 0% 0%;
+}
+
+.center, .general, .score {
+    font-size: 1em;
+}
+
+.chart, .analysis {
     float: left;
-    width: 40%;
-    height: 40%;
+    width: 45%;
     min-height: 400px;
     min-width: 400px;
 }
 
-.center, .general
-{
-    font-size: 1em;
-}
-
-.center
-{
+.center {
     text-align: center;
 }
 
-.general
-{
-    line-height: 2;
+.score {
+    padding: 5% 5% 5% 5%;
 }
