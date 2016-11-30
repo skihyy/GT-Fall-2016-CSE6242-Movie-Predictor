@@ -19,7 +19,7 @@
             {% csrf_token %}
             <div class="add">
                 <span>Title&nbsp</span>
-                <input class="input" name="title" type="text" maxlength="200">
+                <input class="input" name="title" type="text" maxlength="200" required>
             </div>
             <div class="add">
                 <span>Genre&nbsp</span>
@@ -33,15 +33,15 @@
             </div>
             <div class="add">
                 <span>Actors&nbsp</span>
-                <input class="input" name="actors" type="text" maxlength="200">
+                <input class="input" name="actors" type="text" maxlength="200" required>
             </div>
             <div class="add">
                 <span>Director&nbsp</span>
-                <input class="input" name="director" type="text" maxlength="200">
+                <input class="input" name="director" type="text" maxlength="200" required>
             </div>
             <div class="add">
                 <span>Length&nbsp</span>
-                <input class="input" name="length" type="number" maxlength="3">
+                <input class="input" name="length" type="number" maxlength="3" required>
             </div>
             <div class="submit">
                 <input class="submit" type="submit" name="" value="Submit">
