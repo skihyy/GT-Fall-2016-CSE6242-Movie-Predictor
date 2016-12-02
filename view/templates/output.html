@@ -4,6 +4,7 @@
     <link rel="stylesheet" type="text/css" href="/static/sample.css">
     <link rel="shortcut icon" type="image/x-icon" href="/static/icon.png">
     <script type="text/javascript" src="/static/Chart.js"></script>
+    <script type="text/javascript" src="/static/echarts.js"></script>
     <script type="text/javascript" src="/static/sample.js"></script>
     <meta charset="UTF-8">
     <title>Movie Predictor</title>
@@ -14,18 +15,18 @@
         Prediction of {{ movie_title | safe }}
         <hr/>
     </div>
-    <div class="general">
+    <div class="text-block">
         {% if general_analysis %}
-            <div class="general">{{ general_analysis.general | safe }}</div>
+            <div class="text-block">{{ general_analysis.general | safe }}</div>
             {% if general_analysis.actor %}
-                <div class="actor general">{{ general_analysis.actor | safe }}</div>
+                <div class="text-block">{{ general_analysis.actor | safe }}</div>
             {% endif %}
             {% if general_analysis.actress %}
-                <div class="actress general">{{ general_analysis.actress | safe }}</div>
+                <div class="text-block">{{ general_analysis.actress | safe }}</div>
             {% endif %}
-            <div class="director general">{{ general_analysis.director | safe }}</div>
+            <div class="text-block">{{ general_analysis.director | safe }}</div>
             {% if general_analysis.duration %}
-                <div class="duration general">{{ general_analysis.duration | safe }}</div>
+                <div class="text-block">{{ general_analysis.duration | safe }}</div>
             {% endif %}
         {% endif %}
     </div>
@@ -56,7 +57,7 @@
             <canvas id="myChart"></canvas>
             <script type="text/javascript">
                 var data = {{ chart_js_data | safe }};
-                drawChart(data);
+                drawRadarChart(data);
             </script>
         </div>
     </div>
@@ -67,7 +68,24 @@
         Score Components
         <hr/>
     </div>
-    <div class="general">
+    <div class="text-block">
+        {% if score_components %}
+            {% for row in  score_components %}
+                <div class="percentage">
+                    <div class="block">
+                        <p>{{ row.name | safe }}Importance: {{ row.percentage | safe }}%</p>
+                        <div class="meter">
+                            <div class="meter-bar" style="width:{{ row.percentage | safe }}%">
+                                &nbsp
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="block">{{ row.explanation | safe }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 </div>
 
@@ -76,7 +94,16 @@
         Overall Comparison
         <hr/>
     </div>
-    <div class="general">
+    <div class="block">
+        <div class="comparison-chart" id="comparison-chart">
+            <script>
+                var numOfMoviesList = {{ num_of_movies_list | safe }};
+                var avgDirectorScore = {{ avg_director_score_list | safe }};
+                var avg_actor_score_list = {{ avg_actor_score_list |safe }};
+                var avg_actress_score_list = {{ avg_actress_score_list | safe }};
+                drawComparisonChart(numOfMoviesList, avgDirectorScore, avg_actor_score_list, avg_actress_score_list);
+            </script>
+        </div>
     </div>
 </div>
 </body>

@@ -1,6 +1,6 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from view.models import *
-import random, json
+import random, math
 
 
 # Create your views here.
@@ -10,7 +10,6 @@ def add(request):
     :param request: http request
     :return: web page of adding a movie
     """
-    saved_aggregate_info = AggregateInfo.objects.get(id=1)
     genre = Genre.objects.all()
     return render(request,
                   'input.html',
@@ -19,7 +18,7 @@ def add(request):
 
 def show(request):
     """
-    Handling the new movie information and generate result page.
+    Handling the new movie information and genreate result page.
     :param request: http request
     :return: web page of result
     """
@@ -81,25 +80,34 @@ def show(request):
 
     movie_info.save()
     saved_movie_info = MovieInfo.objects.last()
-
+    # for general use
     saved_movie_score, saved_aggregate_info = compute_score(saved_movie_info, actor_list, director)
-
+    # for radar chart
     chart_js_data = get_chart_js_value(saved_aggregate_info=saved_aggregate_info, saved_movie_score=saved_movie_score)
-
-    general_analysis = create_general_analysis(saved_movie_score)
+    # for radar chart analysis
+    general_analysis = create_genreal_analysis(saved_movie_score)
+    # for score percentages
+    score_components = score_components_maker()
+    # for comparison chart
+    num_of_movies_list, avg_director_score_list, avg_actor_score_list, avg_actress_score_list = get_num_of_movies_list()
 
     return render(request,
                   'output.html',
                   {'chart_js_data': chart_js_data,
                    'movie_title': saved_movie_info.title,
                    'movie_score': json_score(saved_movie_score),
-                   'general_analysis': general_analysis})
+                   'general_analysis': general_analysis,
+                   'score_components': score_components,
+                   'num_of_movies_list': num_of_movies_list,
+                   'avg_director_score_list': avg_director_score_list,
+                   'avg_actor_score_list': avg_actor_score_list,
+                   'avg_actress_score_list': avg_actress_score_list})
 
 
 def compute_score(saved_movie_info, actor_list, director):
     """
     A method used to compute the score of a movie.
-    Currently, it used a random number generator for predicting movie score.
+    Currently, it used a random number genreator for predicting movie score.
     But later this should be fixed by using a real learner.
     :param saved_movie_info: A movie information object
     :param actor_list: A list of person objects for actors / actresses
@@ -112,15 +120,15 @@ def compute_score(saved_movie_info, actor_list, director):
     temp_actress_score = 0.0
     num_of_actress = 0
     for actor in actor_list:
-        temp_generated_score = random.uniform(3, 9)
+        temp_genreated_score = random.uniform(3, 9)
         if actor.sex_is_male:
-            temp_actor_score += temp_generated_score
+            temp_actor_score += temp_genreated_score
             num_of_actors += 1
         else:
-            temp_actress_score += temp_generated_score
+            temp_actress_score += temp_genreated_score
             num_of_actress += 1
         # update data
-        temp_actor_total_score = float(actor.average_score) * float(actor.num_of_movies) + temp_generated_score
+        temp_actor_total_score = float(actor.average_score) * float(actor.num_of_movies) + temp_genreated_score
         actor.num_of_movies += 1
         actor.average_score = temp_actor_total_score / actor.num_of_movies
         actor.save()
@@ -179,9 +187,9 @@ def compute_score(saved_movie_info, actor_list, director):
     return saved_movie_score, saved_aggregate_info
 
 
-def create_general_analysis(saved_movie_score):
+def create_genreal_analysis(saved_movie_score):
     """
-    Based on the score received, generate analysis.
+    Based on the score received, genreate analysis.
     :param saved_movie_score: a movie score object
     :return: a plain text paragraph for analysis
     """
@@ -211,7 +219,7 @@ def create_general_analysis(saved_movie_score):
             analysis["actress"] = "Lovely beauties in actress list. But that may not be enough to make you a success."
         elif 7 > saved_movie_score.actress_score:
             analysis["actress"] = "Wow! What a nice actress group. Being honest, this team can make some difference! " \
-                                  "Your file may be even better if you could have more considerations about scenes, " \
+                                  "Your film may be even better if you could have more considerations about scenes, " \
                                   "environment, and etc. But it seems very good now."
         else:
             analysis["actress"] = "110 / 100 actress team!"
@@ -231,8 +239,8 @@ def create_general_analysis(saved_movie_score):
 
 def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
     """
-    Get json from score to generate radar chart.
-    :param saved_aggregate_info: general score information for all movies
+    Get json from score to genreate radar chart.
+    :param saved_aggregate_info: genreal score information for all movies
     :param saved_movie_score: specific score information for one movie
     :return: json for create radar chart
     """
@@ -255,7 +263,7 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
 
     if saved_movie_score is None:
         data = {
-            'labels': ["General Score", "Actor Score", "Actress Score", "Director Score", "Duration",
+            'labels': ["genreal Score", "Actor Score", "Actress Score", "Director Score", "Duration",
                        "Genre Score", "Box Office"],
             'datasets': [
                 {
@@ -278,7 +286,7 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
         }
     else:
         data = {
-            'labels': ["General Score", "Actor Score", "Actress Score", "Director Score", "Duration",
+            'labels': ["genreal Score", "Actor Score", "Actress Score", "Director Score", "Duration",
                        "Genre Score", "Box Office"],
             'datasets': [
                 {
@@ -329,3 +337,132 @@ def json_score(saved_movie_score):
             "actress_score": saved_movie_score.actress_score, "director_score": saved_movie_score.director_score,
             "duration_score": saved_movie_score.duration_score, "genre_score": saved_movie_score.genre_score,
             "avg_movie_box": saved_movie_score.avg_movie_box}
+
+
+def score_components_maker():
+    """
+    genreate a explanation for components of a score.
+    :return:
+    """
+    director_percentage, actor_percentage, actress_percentage = get_percentage()
+
+    duration_percentage = 10
+    genre_percentage = 5
+
+    score_components = [
+        {"percentage": director_percentage,
+         "explanation": "Director is the fundamental of a movie. "
+                        "If you have a too naive director, the movie may be naive, too.",
+         "name": "Director "},
+        {"percentage": actor_percentage,
+         "explanation": "Actor, and actress are the basic but also the most glorious element in the show. "
+                        "You need them to make your show perfect. Here your actor has "
+                        + str(actor_percentage) + "% importance in your movie.",
+         "name": "Actor "},
+        {"percentage": actress_percentage,
+         "explanation": "Secrets make a woman woman. Thus an actress make a movie movie.",
+         "name": "Actress "},
+        {"percentage": duration_percentage,
+         "explanation": "Duration usually has less importance in one movie. "
+                        "The system has assigned " + str(duration_percentage) + "% importance.",
+         "name": "Duration "},
+        {"percentage": genre_percentage,
+         "explanation": "Like duration, different audiences have different favorites, "
+                        "which leads this section only stands for " + str(genre_percentage) + "%.",
+         "name": "Genre "},
+    ]
+
+    return score_components
+
+
+def get_percentage():
+    """
+    A simple percentage generator.
+    :return: 3 random percentage making .85
+    """
+    total = 85
+    part1 = random.randrange(15, 35)
+    total -= part1
+    part2 = random.randrange(15, 35)
+    total -= part2
+    return total, part2, part1
+
+
+def get_num_of_movies_list():
+    """
+    Get comparison chart data.
+    :return: comparison chart data
+    """
+    movie_scores = MovieScore.objects.all()
+    length_of_list = range(10)
+    num_of_movies_list = [0 for i in length_of_list]
+    director_score_list = [0 for i in length_of_list]
+    director_num_movie_list = [0 for i in length_of_list]
+    actor_score_list = [0 for i in length_of_list]
+    actor_num_movie_list = [0 for i in length_of_list]
+    actress_score_list = [0 for i in length_of_list]
+    actress_num_movie_list = [0 for i in length_of_list]
+
+    for movie_score in movie_scores:
+        # be careful
+        # num_of_movies_list is the number of movies in each interval
+        # which is different from others
+        score_location = get_location_of_score(movie_score.score)
+        num_of_movies_list[score_location] += 1
+
+        # be careful
+        # avg_director_score_list is average score in each interval
+        # which is different from num_of_movies_list
+        director_score_location = get_location_of_score(movie_score.director_score)
+        director_score_list[director_score_location] += movie_score.director_score
+        director_num_movie_list[director_score_location] += 1
+
+        # be careful
+        # avg_director_score_list is average score in each interval
+        # which is different from num_of_movies_list
+        actor_score_location = get_location_of_score(movie_score.actor_score)
+        actor_score_list[actor_score_location] += movie_score.actor_score
+        actor_num_movie_list[actor_score_location] += 1
+
+        # be careful
+        # avg_director_score_list is average score in each interval
+        # which is different from num_of_movies_list
+        actress_score_location = get_location_of_score(movie_score.actress_score)
+        actress_score_list[actress_score_location] += movie_score.actress_score
+        actress_num_movie_list[actress_score_location] += 1
+
+    print(director_score_list)
+
+    avg_director_score_list = get_average(director_score_list, director_num_movie_list)
+    avg_actor_score_list = get_average(actor_score_list, actor_num_movie_list)
+    avg_actress_score_list = get_average(actress_score_list, actress_num_movie_list)
+
+    return num_of_movies_list, avg_director_score_list, avg_actor_score_list, avg_actress_score_list
+
+
+def get_location_of_score(score):
+    """
+    Given a score, return the proper position. E.g. 1.5 -> 0, 3.8 -> 2
+    :param score:
+    :return:
+    """
+    return int(math.floor(score) - 1)
+
+
+def get_average(num_list, frequency_list):
+    """
+    Given a list of total, return the average.
+    :param num_list: score list (in total)
+    :param frequency_list: number of items
+    :return: the average list
+    """
+    result = []
+    repeat_range = range(len(num_list))
+
+    for i in repeat_range:
+        if 0 != frequency_list[i]:
+            result.append(float(num_list[i] / frequency_list[i]))
+        else:
+            result.append(0)
+
+    return result
