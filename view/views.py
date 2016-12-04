@@ -2,9 +2,7 @@ from django.shortcuts import render
 from view.models import *
 import random
 import math
-import json
 import moviescorepredictorml
-from urllib import urlopen
 
 
 # Create your views here.
@@ -14,19 +12,15 @@ def add(request):
     :param request: http request
     :return: web page of adding a movie
     """
-    testMovieScore()
-
     genre = Genre.objects.all()
-    director_data, actor_data = get_directors_actors()
+    director_names, actor_names, director_data, actor_data = get_directors_actors()
     return render(request,
                   'input.html',
                   {'genres': genre,
                    'directors': director_data,
-                   'actors': actor_data})
-
-
-def testMovieScore():
-    print(moviescorepredictorml.movie_score('Robert Pattinson', 'David Yates', 'Romance'))  # actor, director, genre
+                   'director_autocomplete': director_names,
+                   'actors': actor_data,
+                   'actors_autocomplete': actor_names})
 
 
 def show(request):
@@ -36,69 +30,72 @@ def show(request):
     :return: web page of result
     """
     genre_selected = Genre.objects.get(id=request.POST["genre"])
-
-    # handle actors entered
-    # if in the DB, get her or him
-    # if not, create one
-    actors_name_from_form = request.POST["actors"]
-    actor_name_list = actors_name_from_form.split(",")
-    # get rid of space
-    actor_range = range(len(actor_name_list))
-    for i in actor_range:
-        actor_name_list[i] = actor_name_list[i].strip()
-    actor_list = []
-    actor_id = ""
-    for temp_actor_name in actor_name_list:
-        temp_actor_list = Person.objects.filter(name=temp_actor_name, type_is_director=False)
-        if 0 == len(temp_actor_list):
-            if 0 == random.uniform(0, 1):
-                temp_actor = Person(name=temp_actor_name, type_is_director=False,
-                                    sex_is_male=False, average_score=0, num_of_movies=0)
-            else:
-                temp_actor = Person(name=temp_actor_name, type_is_director=False,
-                                    sex_is_male=True, average_score=0, num_of_movies=0)
-            temp_actor.save()
-            temp_actor = Person.objects.last()
-        else:
-            temp_actor = temp_actor_list[0]
-
-        actor_list.append(temp_actor)
-        actor_id += str(temp_actor.id) + ","
-
+    leading_actor_name = request.POST["actor1"]
+    support_actor_name = request.POST["actor2"]
     director_name = request.POST["director"]
-    director_list = Person.objects.filter(name=director_name, type_is_director=True)
 
-    # same way for a director
+    # find data in database
+    leading_actor_list = Person.objects.filter(name=leading_actor_name)
+    if 0 == len(leading_actor_list):
+        leading_actor = Person(name=leading_actor_name, type_is_director=False,
+                               average_score=0, num_of_movies=0)
+        leading_actor.save()
+        # this will have id information
+        leading_actor = Person.objects.last()
+    else:
+        leading_actor = leading_actor_list[0]
+
+    # find data in database
+    support_actor_list = Person.objects.filter(name=support_actor_name)
+    if 0 == len(support_actor_list):
+        support_actor = Person(name=leading_actor_name, type_is_director=False,
+                               average_score=0, num_of_movies=0)
+        support_actor.save()
+        # this will have id information
+        support_actor = Person.objects.last()
+    else:
+        support_actor = support_actor_list[0]
+
+    # find data in database
+    director_list = Person.objects.filter(name=director_name, type_is_director=True)
     if 0 == len(director_list):
-        if 0 == random.uniform(0, 1):
-            director = Person(name=director_name, type_is_director=True, average_score=0,
-                              num_of_movies=0, sex_is_male=False)
-        else:
-            director = Person(name=director_name, type_is_director=True, average_score=0,
-                              num_of_movies=0, sex_is_male=True)
+        director = Person(name=leading_actor_name, type_is_director=True,
+                          average_score=0, num_of_movies=0)
         director.save()
+        # this will have id information
         director = Person.objects.last()
     else:
         director = director_list[0]
 
-    director_id = director.id
+    # compute the score
+    # actor, director, genre
+    '''
+    first_set_score = moviescorepredictorml.movie_score(str(leading_actor.name),
+                                                        str(director.name),
+                                                        str(genre_selected.genre))
+    second_set_score = moviescorepredictorml.movie_score(str(support_actor.name),
+                                                         str(director.name),
+                                                         str(genre_selected.genre))
+                                                         '''
+    first_set_score = moviescorepredictorml.movie_score("CCH Pounder", "James Cameron", str(genre_selected.genre))
+    second_set_score = moviescorepredictorml.movie_score("Joel David Moore", "James Cameron", str(genre_selected.genre))
 
-    movie_info = MovieInfo(
-        title=request.POST["title"],
-        genre=genre_selected,
-        actor_ids=actor_id,
-        director_id=director_id,
-        duration=request.POST["duration"]
-    )
-
+    # save this movie
+    movie_info = MovieInfo(title=request.POST["title"],
+                           genre=genre_selected,
+                           first_actor_id=leading_actor.id,
+                           second_actor_id=support_actor.id,
+                           director_id=director.id)
     movie_info.save()
     saved_movie_info = MovieInfo.objects.last()
+
     # for general use
-    saved_movie_score, saved_aggregate_info = compute_score(saved_movie_info, actor_list, director)
-    # for radar chart
-    chart_js_data = get_chart_js_value(saved_aggregate_info=saved_aggregate_info, saved_movie_score=saved_movie_score)
+    saved_movie_score, saved_aggregate_info = compute_score(saved_movie_info, leading_actor, support_actor, director,
+                                                            first_set_score, second_set_score)
+    # for radar chart and analysis
+    chart_js_data = get_chart_js_value(saved_aggregate_info, saved_movie_score)
     # for radar chart analysis
-    general_analysis = create_genreal_analysis(saved_movie_score)
+    general_analysis = create_general_analysis(saved_movie_score)
     # for score percentages
     score_components = score_components_maker()
     # for comparison chart
@@ -117,7 +114,8 @@ def show(request):
                    'avg_actress_score_list': avg_actress_score_list})
 
 
-def compute_score(saved_movie_info, actor_list, director):
+def compute_score(saved_movie_info, leading_actor, support_actor, director,
+                  first_set_score, second_set_score):
     """
     A method used to compute the score of a movie.
     Currently, it used a random number genreator for predicting movie score.
@@ -127,56 +125,43 @@ def compute_score(saved_movie_info, actor_list, director):
     :param director: A person object for director
     :return: A movie score object contains all score of it and the aggregate score information
     """
-    # actors score
-    temp_actor_score = 0.0
-    num_of_actors = 0
-    temp_actress_score = 0.0
-    num_of_actress = 0
-    for actor in actor_list:
-        temp_genreated_score = random.uniform(3, 9)
-        if actor.sex_is_male:
-            temp_actor_score += temp_genreated_score
-            num_of_actors += 1
-        else:
-            temp_actress_score += temp_genreated_score
-            num_of_actress += 1
-        # update data
-        temp_actor_total_score = float(actor.average_score) * float(actor.num_of_movies) + temp_genreated_score
-        actor.num_of_movies += 1
-        actor.average_score = temp_actor_total_score / actor.num_of_movies
-        actor.save()
+    # movie score
+    score = (float(first_set_score["score"]) + float(second_set_score["score"])) / 2
+    first_actor_genre_score = float(first_set_score["actor-genre"])
+    second_actor_genre_score = float(second_set_score["actor-genre"])
+    first_actor_director_score = float(first_set_score["actor-director"])
+    second_actor_director_score = float(second_set_score["actor-director"])
+    director_genre_score = float(first_set_score["score"])
+    first_actor_score = (first_actor_genre_score + first_actor_director_score) / 2
+    second_actor_score = (second_actor_genre_score + second_actor_director_score) / 2
+    genre_score = (first_actor_genre_score + second_actor_genre_score) / 2
+    director_score = score
 
-    if 0 != num_of_actors:
-        temp_actor_score /= num_of_actors
-    if 0 != num_of_actress:
-        temp_actress_score /= num_of_actress
+    # update data
+    leading_actor.average_score = (float(leading_actor.average_score) * leading_actor.num_of_movies
+                                   + first_actor_score) / (1 + leading_actor.num_of_movies)
+    leading_actor.num_of_movies += 1
+    leading_actor.save()
 
-    # director score
-    temp_director_score = random.uniform(3, 9)
-    director.num_of_movies += 1
-    director.average_score = (float(director.average_score) * (director.num_of_movies - 1)
-                              + temp_director_score) / float(director.num_of_movies)
-    director.save()
-
-    temp_duration_score = random.uniform(3, 9)
-    temp_genre_score = random.uniform(3, 9)
-    temp_box_score = random.uniform(3, 9)
-    temp_score = (temp_actor_score + temp_actress_score +
-                  temp_director_score + temp_duration_score +
-                  temp_genre_score + temp_box_score) / 6
+    print(support_actor.average_score)
+    support_actor.average_score = (float(support_actor.average_score) * support_actor.num_of_movies
+                                   + second_actor_score) / (1 + support_actor.num_of_movies)
+    support_actor.num_of_movies += 1
+    support_actor.save()
 
     movie_score = MovieScore(movie=saved_movie_info,
-                             actor_score=temp_actor_score,
-                             director_score=temp_director_score,
-                             duration_score=temp_duration_score,
-                             genre_score=temp_genre_score,
-                             score=temp_score,
-                             actress_score=temp_actress_score,
-                             avg_movie_box=temp_box_score)
-
+                             score=score,
+                             first_actor_genre_score=first_actor_genre_score,
+                             second_actor_genre_score=second_actor_genre_score,
+                             first_actor_director_score=first_actor_director_score,
+                             second_actor_director_score=second_actor_director_score,
+                             director_genre_score=director_genre_score,
+                             first_actor_score=first_actor_score,
+                             second_actor_score=second_actor_score,
+                             genre_score=genre_score,
+                             director_score=director_score)
     # save to database
     movie_score.save()
-
     # get from database object since it has strict format requirement
     saved_movie_score = MovieScore.objects.last()
 
@@ -184,14 +169,16 @@ def compute_score(saved_movie_info, actor_list, director):
 
     # update information
     aggregate_score_object.number_of_movies += 1
-    aggregate_score_object.actor_score += saved_movie_score.actor_score
-    aggregate_score_object.actress_score += saved_movie_score.actress_score
-    aggregate_score_object.director_score += saved_movie_score.director_score
-    aggregate_score_object.duration_score += saved_movie_score.duration_score
-    aggregate_score_object.genre_score += saved_movie_score.genre_score
-    aggregate_score_object.avg_movie_box += saved_movie_score.avg_movie_box
     aggregate_score_object.score += saved_movie_score.score
-
+    aggregate_score_object.first_actor_genre_score += saved_movie_score.first_actor_genre_score
+    aggregate_score_object.second_actor_genre_score += saved_movie_score.second_actor_genre_score
+    aggregate_score_object.first_actor_director_score += saved_movie_score.first_actor_director_score
+    aggregate_score_object.second_actor_director_score += saved_movie_score.second_actor_director_score
+    aggregate_score_object.director_genre_score += saved_movie_score.director_genre_score
+    aggregate_score_object.first_actor_score += saved_movie_score.first_actor_score
+    aggregate_score_object.second_actor_score += saved_movie_score.second_actor_score
+    aggregate_score_object.genre_score += saved_movie_score.genre_score
+    aggregate_score_object.director_score += saved_movie_score.director_score
     # update database
     aggregate_score_object.save()
 
@@ -200,7 +187,7 @@ def compute_score(saved_movie_info, actor_list, director):
     return saved_movie_score, saved_aggregate_info
 
 
-def create_genreal_analysis(saved_movie_score):
+def create_general_analysis(saved_movie_score):
     """
     Based on the score received, genreate analysis.
     :param saved_movie_score: a movie score object
@@ -215,27 +202,25 @@ def create_genreal_analysis(saved_movie_score):
     else:
         analysis["general"] = "Compared to other movies, your movie will be the best-seller! "
 
-    if 0 != saved_movie_score.actor_score:
-        if 5 > saved_movie_score.actor_score:
-            analysis["actor"] = "Maybe you could have other actors here. " \
-                                "They may have different experiences which may help you be even " \
-                                "more successful in this movie!"
-        elif 7 > saved_movie_score.actor_score:
-            analysis["actor"] = "Good choice in actors. To be honest, actors are very important " \
-                                "in a movie. And you made it! Great team with great actors!"
-        else:
-            analysis["actor"] = "**!! What a talent producer here who made such a talent decision! " \
-                                "I'm sure your movie will be great in actor list!"
+    if 5 > saved_movie_score.first_actor_score:
+        analysis["actor"] = "Maybe you could have other actors here. " \
+                            "They may have different experiences which may help you be even " \
+                            "more successful in this movie!"
+    elif 7 > saved_movie_score.first_actor_score:
+        analysis["actor"] = "Good choice in actors. To be honest, actors are very important " \
+                            "in a movie. And you made it! Great team with great actors!"
+    else:
+        analysis["actor"] = "**!! What a talent producer here who made such a talent decision! " \
+                            "I'm sure your movie will be great in actor list!"
 
-    if 0 != saved_movie_score.actress_score:
-        if 5 > saved_movie_score.actress_score:
-            analysis["actress"] = "Lovely beauties in actress list. But that may not be enough to make you a success."
-        elif 7 > saved_movie_score.actress_score:
-            analysis["actress"] = "Wow! What a nice actress group. Being honest, this team can make some difference! " \
-                                  "Your film may be even better if you could have more considerations about scenes, " \
-                                  "environment, and etc. But it seems very good now."
-        else:
-            analysis["actress"] = "110 / 100 actress team!"
+    if 5 > saved_movie_score.second_actor_score:
+        analysis["actress"] = "Lovely beauties in actress list. But that may not be enough to make you a success."
+    elif 7 > saved_movie_score.second_actor_score:
+        analysis["actress"] = "Wow! What a nice actress group. Being honest, this team can make some difference! " \
+                              "Your film may be even better if you could have more considerations about scenes, " \
+                              "environment, and etc. But it seems very good now."
+    else:
+        analysis["actress"] = "110 / 100 actress team!"
 
     if 5 > saved_movie_score.director_score:
         analysis["director"] = "Hum ... Let me check ... The director is relatively new hum? Nice try!"
@@ -244,98 +229,107 @@ def create_genreal_analysis(saved_movie_score):
     else:
         analysis["director"] = "What!?? You have the best director!!?? Awesome!!!"
 
-    if 5 > saved_movie_score.duration_score:
-        analysis["duration"] = "The duration of this film is really ... hum ... interesting."
-
     return analysis
 
 
-def get_chart_js_value(saved_aggregate_info, saved_movie_score=None):
+def get_chart_js_value(saved_aggregate_info, saved_movie_score):
     """
     Get json from score to genreate radar chart.
     :param saved_aggregate_info: genreal score information for all movies
     :param saved_movie_score: specific score information for one movie
     :return: json for create radar chart
     """
-    if 0 == saved_aggregate_info.number_of_movies:
-        temp_score = 0
-        temp_actor_score = 0
-        temp_actress_score = 0
-        temp_director_score = 0
-        temp_duration_score = 0
-        temp_genre_score = 0
-        temp_movie_box = 0
-    else:
-        temp_score = saved_aggregate_info.score / saved_aggregate_info.number_of_movies
-        temp_actor_score = saved_aggregate_info.actor_score / saved_aggregate_info.number_of_movies
-        temp_actress_score = saved_aggregate_info.actress_score / saved_aggregate_info.number_of_movies
-        temp_director_score = saved_aggregate_info.director_score / saved_aggregate_info.number_of_movies
-        temp_duration_score = saved_aggregate_info.duration_score / saved_aggregate_info.number_of_movies
-        temp_genre_score = saved_aggregate_info.genre_score / saved_aggregate_info.number_of_movies
-        temp_movie_box = saved_aggregate_info.avg_movie_box / saved_aggregate_info.number_of_movies
+    # score of correlation set
+    temp_first_actor_genre_score = saved_aggregate_info.first_actor_genre_score / saved_aggregate_info.number_of_movies
+    temp_second_actor_genre_score = saved_aggregate_info.second_actor_genre_score / saved_aggregate_info.number_of_movies
+    temp_first_actor_director_score = saved_aggregate_info.first_actor_director_score / saved_aggregate_info.number_of_movies
+    temp_second_actor_director_score = saved_aggregate_info.second_actor_director_score / saved_aggregate_info.number_of_movies
+    temp_director_genre_score = saved_aggregate_info.director_genre_score / saved_aggregate_info.number_of_movies
 
-    if saved_movie_score is None:
-        data = {
-            'labels': ["genreal Score", "Actor Score", "Actress Score", "Director Score", "Duration",
-                       "Genre Score", "Box Office"],
-            'datasets': [
-                {
-                    'label': "Average",
-                    'backgroundColor': "rgba(255,99,132,0.2)",
-                    'borderColor': "rgba(255,99,132,1)",
-                    'pointBackgroundColor': "rgba(255,99,132,1)",
-                    'pointBorderColor': "#fff",
-                    'pointHoverBackgroundColor': "#fff",
-                    'pointHoverBorderColor': "rgba(255,99,132,1)",
-                    'data': [str(temp_score),
-                             str(temp_actor_score),
-                             str(temp_actress_score),
-                             str(temp_director_score),
-                             str(temp_duration_score),
-                             str(temp_genre_score),
-                             str(temp_movie_box)]
-                }
-            ]
-        }
-    else:
-        data = {
-            'labels': ["genreal Score", "Actor Score", "Actress Score", "Director Score", "Duration",
-                       "Genre Score", "Box Office"],
-            'datasets': [
-                {
-                    'label': str(saved_movie_score.movie.title),
-                    'backgroundColor': "rgba(255,99,132,0.2)",
-                    'borderColor': "rgba(255,99,132,1)",
-                    'pointBackgroundColor': "rgba(255,99,132,1)",
-                    'pointBorderColor': "#fff",
-                    'pointHoverBackgroundColor': "#fff",
-                    'pointHoverBorderColor': "rgba(255,99,132,1)",
-                    'data': [str(saved_movie_score.score),
-                             str(saved_movie_score.actor_score),
-                             str(saved_movie_score.actress_score),
-                             str(saved_movie_score.director_score),
-                             str(saved_movie_score.duration_score),
-                             str(saved_movie_score.genre_score),
-                             str(saved_movie_score.avg_movie_box)]
-                },
-                {
-                    'label': "Average",
-                    'fbackgroundColor': "rgba(179,181,198,0.2)",
-                    'borderColor': "rgba(179,181,198,1)",
-                    'pointBackgroundColor': "rgba(179,181,198,1)",
-                    'pointBorderColor': "#fff",
-                    'pointHoverBackgroundColor': "#fff",
-                    'pointHoverBorderColor': "rgba(179,181,198,1)",
-                    'data': [str(temp_score),
-                             str(temp_actor_score),
-                             str(temp_actress_score),
-                             str(temp_director_score),
-                             str(temp_duration_score),
-                             str(temp_genre_score),
-                             str(temp_movie_box)]
-                }
-            ]
-        }
+    correlation_data = generate_chart_js_data(str(saved_movie_score.movie.title),
+                                              "Leading Actor - Genre",
+                                              "Support Actor - Genre",
+                                              "Leading Actor - Director",
+                                              "Support Actor - Director",
+                                              "Director - Genre",
+                                              temp_first_actor_genre_score,
+                                              temp_second_actor_genre_score,
+                                              temp_first_actor_director_score,
+                                              temp_second_actor_director_score,
+                                              temp_director_genre_score,
+                                              saved_movie_score.first_actor_genre_score,
+                                              saved_movie_score.second_actor_genre_score,
+                                              saved_movie_score.first_actor_director_score,
+                                              saved_movie_score.second_actor_director_score,
+                                              saved_movie_score.director_genre_score)
+
+    # score of cast set
+    temp_score = saved_aggregate_info.score / saved_aggregate_info.number_of_movies
+    temp_first_actor_score = saved_aggregate_info.first_actor_score / saved_aggregate_info.number_of_movies
+    temp_second_actor_score = saved_aggregate_info.second_actor_score / saved_aggregate_info.number_of_movies
+    temp_director_score = saved_aggregate_info.director_score / saved_aggregate_info.number_of_movies
+    temp_genre_score = saved_aggregate_info.genre_score / saved_aggregate_info.number_of_movies
+
+    cast_data = generate_chart_js_data(str(saved_movie_score.movie.title),
+                                       "General Score",
+                                       "Leading Actor",
+                                       "Support Actor",
+                                       "Director",
+                                       "Genre",
+                                       temp_score,
+                                       temp_first_actor_score,
+                                       temp_second_actor_score,
+                                       temp_director_score,
+                                       temp_genre_score,
+                                       saved_movie_score.score,
+                                       saved_movie_score.first_actor_score,
+                                       saved_movie_score.second_actor_score,
+                                       saved_movie_score.director_score,
+                                       saved_movie_score.genre_score)
+
+    score_value = json_score(saved_movie_score)
+
+    return [
+        {"id": "myChart1", "data_set": cast_data, "analysis": score_value["castScore"]},
+        {"id": "myChart2", "data_set": correlation_data, "analysis": score_value["correlation"]}
+    ]
+
+
+def generate_chart_js_data(title, name1, name2, name3, name4, name5, val1, val2, val3, val4, val5,
+                           val6, val7, val8, val9, val10):
+    data = {
+        'labels': [name1, name2, name3, name4, name5],
+        'datasets': [
+            {
+                'label': title,
+                'backgroundColor': "rgba(255,99,132,0.2)",
+                'borderColor': "rgba(255,99,132,1)",
+                'pointBackgroundColor': "rgba(255,99,132,1)",
+                'pointBorderColor': "#fff",
+                'pointHoverBackgroundColor': "#fff",
+                'pointHoverBorderColor': "rgba(255,99,132,1)",
+                'data': [str(val6),
+                         str(val7),
+                         str(val8),
+                         str(val9),
+                         str(val10)]
+            },
+            {
+                'label': "Average",
+                'fbackgroundColor': "rgba(179,181,198,0.2)",
+                'borderColor': "rgba(179,181,198,1)",
+                'pointBackgroundColor': "rgba(179,181,198,1)",
+                'pointBorderColor': "#fff",
+                'pointHoverBackgroundColor': "#fff",
+                'pointHoverBorderColor': "rgba(179,181,198,1)",
+                'data': [str(val1),
+                         str(val2),
+                         str(val3),
+                         str(val4),
+                         str(val5)]
+            }
+        ]
+    }
 
     return data
 
@@ -346,10 +340,23 @@ def json_score(saved_movie_score):
     :param saved_movie_score: Movie score object
     :return: JSON format movie score object
     """
-    return {"score": saved_movie_score.score, "actor_score": saved_movie_score.actor_score,
-            "actress_score": saved_movie_score.actress_score, "director_score": saved_movie_score.director_score,
-            "duration_score": saved_movie_score.duration_score, "genre_score": saved_movie_score.genre_score,
-            "avg_movie_box": saved_movie_score.avg_movie_box}
+
+    return {
+        "castScore": [
+            "General Score: " + str(saved_movie_score.score),
+            "Leading Actor: " + str(saved_movie_score.first_actor_score),
+            "Support Actor: " + str(saved_movie_score.second_actor_score),
+            "Director: " + str(saved_movie_score.director_score),
+            "Genre: " + str(saved_movie_score.genre_score)
+        ],
+        "correlation": [
+            "Leading Actor - Genre: " + str(saved_movie_score.first_actor_genre_score),
+            "Support Actor - Genre" + str(saved_movie_score.second_actor_genre_score),
+            "Leading Actor - Director: " + str(saved_movie_score.first_actor_director_score),
+            "Support Actor - Director: " + str(saved_movie_score.second_actor_director_score),
+            "Director - Genre: " + str(saved_movie_score.director_genre_score)
+        ]
+    }
 
 
 def score_components_maker():
@@ -359,8 +366,7 @@ def score_components_maker():
     """
     director_percentage, actor_percentage, actress_percentage = get_percentage()
 
-    duration_percentage = 10
-    genre_percentage = 5
+    genre_percentage = 15
 
     score_components = [
         {"percentage": director_percentage,
@@ -368,17 +374,13 @@ def score_components_maker():
                         "If you have a too naive director, the movie may be naive, too.",
          "name": "Director "},
         {"percentage": actor_percentage,
-         "explanation": "Actor, and actress are the basic but also the most glorious element in the show. "
-                        "You need them to make your show perfect. Here your actor has "
+         "explanation": "Leading actor, and actress are the basic but also the most glorious element in the show. "
+                        "You need them to make your show perfect. Here your leading actor has "
                         + str(actor_percentage) + "% importance in your movie.",
-         "name": "Actor "},
+         "name": "Leading Actor "},
         {"percentage": actress_percentage,
-         "explanation": "Secrets make a woman woman. Thus an actress make a movie movie.",
-         "name": "Actress "},
-        {"percentage": duration_percentage,
-         "explanation": "Duration usually has less importance in one movie. "
-                        "The system has assigned " + str(duration_percentage) + "% importance.",
-         "name": "Duration "},
+         "explanation": "Secrets make a woman woman. But a support actor also makes a movie movie.",
+         "name": "Support Actor "},
         {"percentage": genre_percentage,
          "explanation": "Like duration, different audiences have different favorites, "
                         "which leads this section only stands for " + str(genre_percentage) + "%.",
@@ -407,13 +409,14 @@ def get_num_of_movies_list():
     :return: comparison chart data
     """
     movie_scores = MovieScore.objects.all()
+    # 0 and 10 is the highest / lowest score
     length_of_list = range(10)
     num_of_movies_list = [0 for i in length_of_list]
     director_score_list = [0 for i in length_of_list]
     director_num_movie_list = [0 for i in length_of_list]
-    actor_score_list = [0 for i in length_of_list]
+    first_actor_score_list = [0 for i in length_of_list]
     actor_num_movie_list = [0 for i in length_of_list]
-    actress_score_list = [0 for i in length_of_list]
+    second_actor_score_list = [0 for i in length_of_list]
     actress_num_movie_list = [0 for i in length_of_list]
 
     for movie_score in movie_scores:
@@ -433,24 +436,24 @@ def get_num_of_movies_list():
         # be careful
         # avg_director_score_list is average score in each interval
         # which is different from num_of_movies_list
-        actor_score_location = get_location_of_score(movie_score.actor_score)
-        actor_score_list[actor_score_location] += movie_score.actor_score
-        actor_num_movie_list[actor_score_location] += 1
+        first_actor_score_location = get_location_of_score(movie_score.first_actor_score)
+        first_actor_score_list[first_actor_score_location] += movie_score.first_actor_score
+        actor_num_movie_list[first_actor_score_location] += 1
 
         # be careful
         # avg_director_score_list is average score in each interval
         # which is different from num_of_movies_list
-        actress_score_location = get_location_of_score(movie_score.actress_score)
-        actress_score_list[actress_score_location] += movie_score.actress_score
-        actress_num_movie_list[actress_score_location] += 1
+        second_actor_score_location = get_location_of_score(movie_score.second_actor_score)
+        second_actor_score_list[second_actor_score_location] += movie_score.second_actor_score
+        actress_num_movie_list[second_actor_score_location] += 1
 
     print(director_score_list)
 
     avg_director_score_list = get_average(director_score_list, director_num_movie_list)
-    avg_actor_score_list = get_average(actor_score_list, actor_num_movie_list)
-    avg_actress_score_list = get_average(actress_score_list, actress_num_movie_list)
+    avg_first_actor_score_list = get_average(first_actor_score_list, actor_num_movie_list)
+    avg_second_actor_score_list = get_average(second_actor_score_list, actress_num_movie_list)
 
-    return num_of_movies_list, avg_director_score_list, avg_actor_score_list, avg_actress_score_list
+    return num_of_movies_list, avg_director_score_list, avg_first_actor_score_list, avg_second_actor_score_list
 
 
 def get_location_of_score(score):
@@ -487,13 +490,21 @@ def get_directors_actors():
     :return: 2 arrays and one of which is director list and the other one is actor list
     """
     people = Person.objects.all()
+    director_names = []
     directors = []
+    actor_names = []
     actors = []
 
     for person in people:
+        if 500 < len(director_names) and 500 < len(actor_names):
+            break
         if person.type_is_director:
-            directors.append(person.name)
+            if 50 > len(directors):
+                directors.append(str(person.name))
+            director_names.append(str(person.name))
         else:
-            actors.append(person.name)
+            if 50 > len(actors):
+                actors.append(str(person.name))
+            actor_names.append(str(person.name))
 
-    return directors, actors
+    return director_names, actor_names, directors, actors

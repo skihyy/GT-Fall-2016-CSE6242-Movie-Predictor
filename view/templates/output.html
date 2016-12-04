@@ -38,28 +38,25 @@
         <hr/>
     </div>
     <div class="general">
-        <div class="analysis">
-            {% if movie_score %}
-                <div class="score">General score: {{ movie_score.score | safe }}</div>
-                {% if 0 != movie_score.actor_score %}
-                    <div class="score">Actor: {{ movie_score.actor_score | safe }}</div>
-                {% endif %}
-                {% if 0 != movie_score.actress_score %}
-                    <div class="score">Actress: {{ movie_score.actress_score | safe }}</div>
-                {% endif %}
-                <div class="score">Director: {{ movie_score.director_score | safe }}</div>
-                <div class="score">Duration: {{ movie_score.duration_score | safe }}</div>
-                <div class="score">Genre: {{ movie_score.genre_score | safe }}</div>
-                <div class="score">Movie Box: {{ movie_score.avg_movie_box | safe }}</div>
-            {% endif %}
-        </div>
-        <div class="chart">
-            <canvas id="myChart"></canvas>
-            <script type="text/javascript">
-                var data = {{ chart_js_data | safe }};
-                drawRadarChart(data);
-            </script>
-        </div>
+        {% if chart_js_data %}
+            {% for data in chart_js_data %}
+                <div class="analysis">
+                    {% for row in data.analysis %}
+                        <div class="score">
+                            {{ row | safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="chart">
+                    <canvas id="{{ data.id | safe }}"></canvas>
+                    <script type="text/javascript">
+                        var data = {{ data.data_set | safe }}, id = "{{ data.id | safe }}";
+                        drawRadarChart(id, data);
+                    </script>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 </div>
 

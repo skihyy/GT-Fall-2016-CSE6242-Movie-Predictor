@@ -11,10 +11,15 @@ class Person(models.Model):
     one as a actress, and the other one as a director.
     """
     name = models.CharField(max_length=40)
-    sex_is_male = models.BooleanField()
-    average_score = models.DecimalField(decimal_places=2, max_digits=3)
+    average_score = models.FloatField()
     type_is_director = models.BooleanField()
     num_of_movies = models.IntegerField()
+
+    def __str__(self):
+        return self.name
+
+    def __unicode__(self):
+        return self.name
 
 
 class AggregateInfo(models.Model):
@@ -25,13 +30,22 @@ class AggregateInfo(models.Model):
     And then parse the new average score back to user to show the differences in radar chart.
     """
     number_of_movies = models.IntegerField()
-    score = models.DecimalField(decimal_places=2, max_digits=20)
-    actor_score = models.DecimalField(decimal_places=2, max_digits=20)
-    actress_score = models.DecimalField(decimal_places=2, max_digits=20)
-    director_score = models.DecimalField(decimal_places=2, max_digits=20)
-    duration_score = models.DecimalField(decimal_places=2, max_digits=20)
-    genre_score = models.DecimalField(decimal_places=2, max_digits=20)
-    avg_movie_box = models.DecimalField(decimal_places=2, max_digits=20)
+    score = models.FloatField()
+    first_actor_genre_score = models.FloatField()
+    second_actor_genre_score = models.FloatField()
+    first_actor_director_score = models.FloatField()
+    second_actor_director_score = models.FloatField()
+    director_genre_score = models.FloatField()
+    first_actor_score = models.FloatField()
+    second_actor_score = models.FloatField()
+    director_score = models.FloatField()
+    genre_score = models.FloatField()
+
+    def __str__(self):
+        return str(self.number_of_movies) + " movies"
+
+    def __unicode__(self):
+        return str(self.number_of_movies) + " movies"
 
 
 class Genre(models.Model):
@@ -58,10 +72,9 @@ class MovieInfo(models.Model):
     """
     title = models.CharField(max_length=200)
     genre = models.ForeignKey(Genre)
-    # actor ID should be separated by "," or ", "
-    actor_ids = models.CharField(max_length=200)
+    first_actor_id = models.IntegerField()
+    second_actor_id = models.IntegerField()
     director_id = models.IntegerField()
-    duration = models.IntegerField()
 
     def __str__(self):
         return self.title
@@ -77,13 +90,16 @@ class MovieScore(models.Model):
     And then information will be parsed to the sample.html to show the differences in radar chart.
     """
     movie = models.ForeignKey(MovieInfo)
-    score = models.DecimalField(decimal_places=2, max_digits=3)
-    actor_score = models.DecimalField(decimal_places=2, max_digits=3)
-    actress_score = models.DecimalField(decimal_places=2, max_digits=3)
-    director_score = models.DecimalField(decimal_places=2, max_digits=3)
-    duration_score = models.DecimalField(decimal_places=2, max_digits=3)
-    genre_score = models.DecimalField(decimal_places=2, max_digits=3)
-    avg_movie_box = models.DecimalField(decimal_places=2, max_digits=3)
+    score = models.FloatField()
+    first_actor_genre_score = models.FloatField()
+    second_actor_genre_score = models.FloatField()
+    first_actor_director_score = models.FloatField()
+    second_actor_director_score = models.FloatField()
+    director_genre_score = models.FloatField()
+    first_actor_score = models.FloatField()
+    second_actor_score = models.FloatField()
+    director_score = models.FloatField()
+    genre_score = models.FloatField()
 
     def __str__(self):
         return self.movie.title

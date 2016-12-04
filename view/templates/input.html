@@ -9,17 +9,17 @@
 </head>
 <body>
 <!-- Input part -->
-<div class="create main">
+<div class="block">
     <div class="title">
         Create A New Movie
         <hr/>
     </div>
-    <div class="addDiv">
+    <div class="block">
         <form action="/view/show" method="post">
             {% csrf_token %}
             <div class="add">
                 <span>Title&nbsp</span>
-                <input class="input" name="title" type="text" maxduration="200" required>
+                <input class="input" name="title" type="text" maxlength="200" required>
             </div>
             <div class="add">
                 <span>Genre&nbsp</span>
@@ -32,20 +32,37 @@
                 </select>
             </div>
             <div class="add">
-                <span>Actors&nbsp</span>
-                <input class="input" name="actors" type="text" maxduration="200" required>
+                <span>Lead Actor&nbsp</span>
+                <input class="input" name="actor1" type="text"
+                       maxlength="200" required list="actors_autocomplete_list">
+            </div>
+            <div class="add">
+                <span>Support Actor&nbsp</span>
+                <input class="input" name="actor2" type="text"
+                       maxlength="200" required list="actors_autocomplete_list">
             </div>
             <div class="add">
                 <span>Director&nbsp</span>
-                <input class="input" name="director" type="text" maxduration="200" required>
-            </div>
-            <div class="add">
-                <span>Duration (min)&nbsp</span>
-                <input class="input" name="duration" type="number" maxduration="3" required>
+                <input class="input" name="director" type="text"
+                       maxlength="200" required list="director_autocomplete_list">
             </div>
             <div class="submit">
                 <input class="submit" type="submit" name="" value="Submit">
             </div>
+            <datalist id="director_autocomplete_list">
+                {% if director_autocomplete %}
+                    {% for name in director_autocomplete %}
+                        <option value="{{ name | safe }}">
+                    {% endfor %}
+                {% endif %}
+            </datalist>
+            <datalist id="actors_autocomplete_list">
+                {% if actors_autocomplete %}
+                    {% for name in actors_autocomplete %}
+                        <option value="{{ name | safe }}">
+                    {% endfor %}
+                {% endif %}
+            </datalist>
         </form>
     </div>
     <div class="title">

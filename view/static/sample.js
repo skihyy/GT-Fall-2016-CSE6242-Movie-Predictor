@@ -2,10 +2,11 @@ var comparisonChart;
 
 /**
  * Drawing the radar chart.
+ * @param id id of canvas
  * @param dataset data set, refer to Chart.js for details
  */
-function drawRadarChart(dataset) {
-    var ctx = document.getElementById("myChart").getContext("2d");
+function drawRadarChart(id, dataset) {
+    var ctx = document.getElementById(id).getContext("2d");
     new Chart(ctx, {
         type: 'radar',
         data: dataset
@@ -36,7 +37,10 @@ function drawComparisonChart(numOfMoviesList, avgDirectorScore, avg_actor_score_
                 saveAsImage: {show: true}
             }
         },
-        legend: {data: ['Number of Movies', 'Average Director Score', 'Average Actor Score', 'Average Actress Score']},
+        legend: {
+            data: ['Number of Movies', 'Average Director Score',
+                'Average Leading Actor Score', 'Average Support Actor Score']
+        },
         xAxis: [{type: 'category', data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']}],
         yAxis: [
             {
@@ -69,13 +73,13 @@ function drawComparisonChart(numOfMoviesList, avgDirectorScore, avg_actor_score_
                 data: avgDirectorScore
             },
             {
-                name: 'Average Actor Score',
+                name: 'Average Leading Actor Score',
                 type: 'line',
                 yAxisIndex: 1,
                 data: avg_actor_score_list
             },
             {
-                name: 'Average Actress Score',
+                name: 'Average Support Actor Score',
                 type: 'line',
                 yAxisIndex: 1,
                 data: avg_actress_score_list
@@ -101,7 +105,7 @@ function getMaxOfArray(numArray) {
 }
 
 window.onresize = function () {
-    if (null != comparisonChart){
+    if (null != comparisonChart) {
         comparisonChart.resize();
     }
 }
