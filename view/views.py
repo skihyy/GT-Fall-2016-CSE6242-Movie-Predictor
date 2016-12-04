@@ -1,6 +1,10 @@
 from django.shortcuts import render
 from view.models import *
-import random, math
+import random
+import math
+import json
+import moviescorepredictorml
+from urllib import urlopen
 
 
 # Create your views here.
@@ -10,15 +14,24 @@ def add(request):
     :param request: http request
     :return: web page of adding a movie
     """
+    testMovieScore()
+
     genre = Genre.objects.all()
+    director_data, actor_data = get_directors_actors()
     return render(request,
                   'input.html',
-                  {'genres': genre})
+                  {'genres': genre,
+                   'directors': director_data,
+                   'actors': actor_data})
+
+
+def testMovieScore():
+    print(moviescorepredictorml.movie_score('Robert Pattinson', 'David Yates', 'Romance'))  # actor, director, genre
 
 
 def show(request):
     """
-    Handling the new movie information and genreate result page.
+    Handling the new movie information and generate result page.
     :param request: http request
     :return: web page of result
     """
@@ -466,3 +479,21 @@ def get_average(num_list, frequency_list):
             result.append(0)
 
     return result
+
+
+def get_directors_actors():
+    """
+    Get information of directors and actors.
+    :return: 2 arrays and one of which is director list and the other one is actor list
+    """
+    people = Person.objects.all()
+    directors = []
+    actors = []
+
+    for person in people:
+        if person.type_is_director:
+            directors.append(person.name)
+        else:
+            actors.append(person.name)
+
+    return directors, actors

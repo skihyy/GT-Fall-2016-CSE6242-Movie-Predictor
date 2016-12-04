@@ -101,5 +101,7 @@ function getMaxOfArray(numArray) {
 }
 
 window.onresize = function () {
-    comparisonChart.resize();
+    if (null != comparisonChart){
+        comparisonChart.resize();
+    }
 }
