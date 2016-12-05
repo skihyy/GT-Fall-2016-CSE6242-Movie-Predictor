@@ -59,7 +59,7 @@ def show(request):
     # find data in database
     director_list = Person.objects.filter(name=director_name, type_is_director=True)
     if 0 == len(director_list):
-        director = Person(name=leading_actor_name, type_is_director=True,
+        director = Person(name=director_name, type_is_director=True,
                           average_score=0, num_of_movies=0)
         director.save()
         # this will have id information
@@ -69,16 +69,12 @@ def show(request):
 
     # compute the score
     # actor, director, genre
-    '''
     first_set_score = moviescorepredictorml.movie_score(str(leading_actor.name),
                                                         str(director.name),
                                                         str(genre_selected.genre))
     second_set_score = moviescorepredictorml.movie_score(str(support_actor.name),
                                                          str(director.name),
                                                          str(genre_selected.genre))
-                                                         '''
-    first_set_score = moviescorepredictorml.movie_score("CCH Pounder", "James Cameron", str(genre_selected.genre))
-    second_set_score = moviescorepredictorml.movie_score("Joel David Moore", "James Cameron", str(genre_selected.genre))
 
     # save this movie
     movie_info = MovieInfo(title=request.POST["title"],
@@ -340,7 +336,6 @@ def json_score(saved_movie_score):
     :param saved_movie_score: Movie score object
     :return: JSON format movie score object
     """
-
     return {
         "castScore": [
             "General Score: " + str(saved_movie_score.score),
