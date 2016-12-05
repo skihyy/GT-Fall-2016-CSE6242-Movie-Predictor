@@ -76,6 +76,8 @@ def show(request):
                                                          str(director.name),
                                                          str(genre_selected.genre))
 
+    print(first_set_score)
+
     # save this movie
     movie_info = MovieInfo(title=request.POST["title"],
                            genre=genre_selected,
@@ -286,7 +288,7 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score):
     score_value = json_score(saved_movie_score)
 
     return [
-        {"id": "myChart1", "data_set": cast_data, "analysis": score_value["castScore"]},
+        # {"id": "myChart1", "data_set": cast_data, "analysis": score_value["castScore"]},
         {"id": "myChart2", "data_set": correlation_data, "analysis": score_value["correlation"]}
     ]
 
@@ -309,7 +311,14 @@ def generate_chart_js_data(title, name1, name2, name3, name4, name5, val1, val2,
                          str(val8),
                          str(val9),
                          str(val10)]
-            },
+            }
+        ]
+    }
+
+    return data
+
+
+''',
             {
                 'label': "Average",
                 'fbackgroundColor': "rgba(179,181,198,0.2)",
@@ -324,10 +333,7 @@ def generate_chart_js_data(title, name1, name2, name3, name4, name5, val1, val2,
                          str(val4),
                          str(val5)]
             }
-        ]
-    }
-
-    return data
+'''
 
 
 def json_score(saved_movie_score):
