@@ -22,7 +22,7 @@ from view import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    # url(r'', views.add),
+    url(r'^$', views.add),
     url(r'^view/add', views.add),
     url(r'^view/show', views.show),
     url(r'^view/(?P<view_id>\d+)', views.show)
