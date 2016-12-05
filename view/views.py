@@ -130,7 +130,8 @@ def compute_score(saved_movie_info, leading_actor, support_actor, director,
     first_actor_director_score = float(first_set_score["actor-director"])
     second_actor_director_score = float(second_set_score["actor-director"])
     director_genre_score = float(first_set_score["score"])
-    first_actor_score = (first_actor_genre_score + first_actor_director_score) / 2
+    # used as neuron score
+    first_actor_score = float(first_set_score["neuralscore"] +               second_set_score["neuralscore"]) / 2
     second_actor_score = (second_actor_genre_score + second_actor_director_score) / 2
     genre_score = (first_actor_genre_score + second_actor_genre_score) / 2
     director_score = score
@@ -253,8 +254,8 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score):
                                               temp_first_actor_genre_score,
                                               temp_second_actor_genre_score,
                                               temp_first_actor_director_score,
-                                              temp_second_actor_director_score,
-                                              temp_director_genre_score,
+                                              saved_movie_score.score,
+                                              saved_movie_score.first_actor_score,
                                               saved_movie_score.first_actor_genre_score,
                                               saved_movie_score.second_actor_genre_score,
                                               saved_movie_score.first_actor_director_score,
@@ -296,7 +297,7 @@ def get_chart_js_value(saved_aggregate_info, saved_movie_score):
 def generate_chart_js_data(title, name1, name2, name3, name4, name5, val1, val2, val3, val4, val5,
                            val6, val7, val8, val9, val10):
     data = {
-        'labels': [name1, name2, name3, name4, name5],
+        'labels': ["Score", name1, name2, name3, name4, name5],
         'datasets': [
             {
                 'label': title,
@@ -306,7 +307,8 @@ def generate_chart_js_data(title, name1, name2, name3, name4, name5, val1, val2,
                 'pointBorderColor': "#fff",
                 'pointHoverBackgroundColor': "#fff",
                 'pointHoverBorderColor': "rgba(255,99,132,1)",
-                'data': [str(val6),
+                'data': [str(val4),
+                         str(val6),
                          str(val7),
                          str(val8),
                          str(val9),

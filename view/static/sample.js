@@ -7,10 +7,13 @@ var comparisonChart;
  */
 function drawRadarChart(id, dataset) {
     var ctx = document.getElementById(id).getContext("2d");
+    var option = {
+      scaleBeginAtZero: true
+    }
     new Chart(ctx, {
         type: 'radar',
         data: dataset
-    });
+    }, option);
 }
 
 /**
