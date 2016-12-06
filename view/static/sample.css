@@ -39,7 +39,7 @@ p{
     clear: both;
 }
 
-.block, .meter, .meter-bar {
+.block, .meter, .meter-bar, .person, .name, .portrait{
     padding: 0% 0% 0% 0%;
 }
 
@@ -84,4 +84,19 @@ p{
 
 .comparison-chart {
     width: 100%;
+}
+
+img {
+    width: 100%;
+    height: 100%;
+}
+
+.person{
+    height: 200px;
+    width: 150px;
+    border:1px  #000;
+    float:left;
+    margin-right: 15px;
+    margin-bottom: 25px;
+    background-color:#CCC;
 }

@@ -2,18 +2,14 @@ var comparisonChart;
 
 /**
  * Drawing the radar chart.
- * @param id id of canvas
  * @param dataset data set, refer to Chart.js for details
  */
 function drawRadarChart(id, dataset) {
     var ctx = document.getElementById(id).getContext("2d");
-    var option = {
-      scaleBeginAtZero: true
-    }
     new Chart(ctx, {
         type: 'radar',
         data: dataset
-    }, option);
+    });
 }
 
 /**
@@ -40,10 +36,7 @@ function drawComparisonChart(numOfMoviesList, avgDirectorScore, avg_actor_score_
                 saveAsImage: {show: true}
             }
         },
-        legend: {
-            data: ['Number of Movies', 'Average Director Score',
-                'Average Leading Actor Score', 'Average Support Actor Score']
-        },
+        legend: {data: ['Number of Movies', 'Average Director Score', 'Average Actor Score', 'Average Actress Score']},
         xAxis: [{type: 'category', data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']}],
         yAxis: [
             {
@@ -76,13 +69,13 @@ function drawComparisonChart(numOfMoviesList, avgDirectorScore, avg_actor_score_
                 data: avgDirectorScore
             },
             {
-                name: 'Average Leading Actor Score',
+                name: 'Average Actor Score',
                 type: 'line',
                 yAxisIndex: 1,
                 data: avg_actor_score_list
             },
             {
-                name: 'Average Support Actor Score',
+                name: 'Average Actress Score',
                 type: 'line',
                 yAxisIndex: 1,
                 data: avg_actress_score_list
@@ -108,7 +101,42 @@ function getMaxOfArray(numArray) {
 }
 
 window.onresize = function () {
-    if (null != comparisonChart) {
+    if (null != comparisonChart){
         comparisonChart.resize();
     }
+}
+
+function addNameToActor(idOfInput1, idOfInput2, idOfImage)
+{
+    var input1 = document.getElementById(idOfInput1);
+    var input2 = document.getElementById(idOfInput2);
+
+    if(0 == input1.value.length)
+    {
+        addName(idOfInput1, idOfImage);
+    }
+    else if(0 == input2.value.length)
+    {
+        addName(idOfInput2, idOfImage);
+    }
+}
+
+function addNameToDirector(idOfInput, idOfImage)
+{
+    console.log("gakki!");
+
+    var input = document.getElementById(idOfInput);
+
+    if(0 == input.value.length)
+    {
+        addName(idOfInput, idOfImage);
+    }
+}
+
+function addName(idOfInput, idOfImage)
+{
+    var input = document.getElementById(idOfInput);
+    var name = document.getElementById(idOfImage).innerHTML;
+    console.log(name);
+    input.value = name.trim();
 }
