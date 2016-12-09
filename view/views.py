@@ -69,14 +69,19 @@ def show(request):
 
     # compute the score
     # actor, director, genre
-    first_set_score = moviescorepredictorml.movie_score(str(leading_actor.name),
-                                                        str(director.name),
-                                                        str(genre_selected.genre))
-    second_set_score = moviescorepredictorml.movie_score(str(support_actor.name),
-                                                         str(director.name),
-                                                         str(genre_selected.genre))
+    # first_set_score = moviescorepredictorml.movie_score(str(leading_actor.name),
+    #                                                    str(director.name),
+    #                                                    str(genre_selected.genre))
+    # second_set_score = moviescorepredictorml.movie_score(str(support_actor.name),
+    #                                                     str(director.name),
+    #                                                     str(genre_selected.genre))
 
-    print(first_set_score)
+    score_set = moviescorepredictorml.movie_score(str(leading_actor.name),
+                                                  str(support_actor.name),
+                                                  str(genre_selected.genre),
+                                                  str(director.name))
+
+    # print(first_set_score)
 
     # save this movie
     movie_info = MovieInfo(title=request.POST["title"],
@@ -88,8 +93,10 @@ def show(request):
     saved_movie_info = MovieInfo.objects.last()
 
     # for general use
-    saved_movie_score, saved_aggregate_info = compute_score(saved_movie_info, leading_actor, support_actor, director,
-                                                            first_set_score, second_set_score)
+    # saved_movie_score, saved_aggregate_info = compute_score(saved_movie_info, leading_actor, support_actor, director, 
+    #                                                        first_set_score, second_set_score)
+    saved_movie_score, saved_aggregate_info = compute_score(saved_movie_info, leading_actor, support_actor, director, 
+                                                            score_set)
     # for radar chart and analysis
     chart_js_data = get_chart_js_value(saved_aggregate_info, saved_movie_score)
     # for radar chart analysis
@@ -112,8 +119,7 @@ def show(request):
                    'avg_actress_score_list': avg_actress_score_list})
 
 
-def compute_score(saved_movie_info, leading_actor, support_actor, director,
-                  first_set_score, second_set_score):
+def compute_score(saved_movie_info, leading_actor, support_actor, director, score_set):
     """
     A method used to compute the score of a movie.
     Currently, it used a random number genreator for predicting movie score.
@@ -124,16 +130,26 @@ def compute_score(saved_movie_info, leading_actor, support_actor, director,
     :return: A movie score object contains all score of it and the aggregate score information
     """
     # movie score
-    score = (float(first_set_score["score"]) + float(second_set_score["score"])) / 2
-    first_actor_genre_score = float(first_set_score["actor-genre"])
-    second_actor_genre_score = float(second_set_score["actor-genre"])
-    first_actor_director_score = float(first_set_score["actor-director"])
-    second_actor_director_score = float(second_set_score["actor-director"])
-    director_genre_score = float(first_set_score["score"])
+    # score = (float(first_set_score["score"]) + float(second_set_score["score"])) / 2
+    # first_actor_genre_score = float(first_set_score["actor-genre"])
+    # second_actor_genre_score = float(second_set_score["actor-genre"])
+    # first_actor_director_score = float(first_set_score["actor-director"])
+    # second_actor_director_score = float(second_set_score["actor-director"])
+    # director_genre_score = float(first_set_score["score"])
     # used as neuron score
-    first_actor_score = float(first_set_score["neuralscore"] +               second_set_score["neuralscore"]) / 2
-    second_actor_score = (second_actor_genre_score + second_actor_director_score) / 2
-    genre_score = (first_actor_genre_score + second_actor_genre_score) / 2
+    # first_actor_score = float(first_set_score["neuralscore"] +               second_set_score["neuralscore"]) / 2
+    # second_actor_score = (second_actor_genre_score + second_actor_director_score) / 2
+    # genre_score = (first_actor_genre_score + second_actor_genre_score) / 2
+    # director_score = score
+    score = float(score_set["neuralscore"])
+    first_actor_genre_score = float(score_set["actor1-genre"])
+    second_actor_genre_score = float(score_set["actor2-genre"])
+    first_actor_director_score = float(score_set["actor1-director"])
+    second_actor_director_score = float(score_set["actor2-director"])
+    director_genre_score = float(score_set["director-genre"])
+    first_actor_score = float(score_set["neuralscore"])
+    second_actor_score = float(score_set["neuralscore"])
+    genre_score = float(first_actor_genre_score + second_actor_genre_score) / 2
     director_score = score
 
     # update data
